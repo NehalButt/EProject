@@ -9,12 +9,25 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
-    private TextView wordTv;
-    private EditText wordEnteredTv;
-    private Button validate, newGame;
-    private String wordToFind;
+public class MainActivity extends AppCompatActivity {
+
+    TextView wordTv;
+     EditText wordEnteredTv;
+     Button validate, newGame;
+
+    Dbhelper dbhelper;
+
+    String currentword;
+
+    Random random;
+
+    String[] gamingword =  {"myword"};
 
     public MainActivity() {
     }
@@ -23,40 +36,78 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         wordTv = (TextView) findViewById(R.id.wordTv);
+
         wordEnteredTv = (EditText) findViewById(R.id.wordEnteredTv);
+
         validate = (Button) findViewById(R.id.validate);
-        validate.setOnClickListener(this);
+
         newGame = (Button) findViewById(R.id.newGame);
-        newGame.setOnClickListener(this);
+
+        dbhelper = new Dbhelper(this);
+
+        random = new Random();
 
         newGame();
-    }
 
-    @Override
-    public void onClick(View view) {
-        if (view == validate) {
-            validate();
-        } else if (view == newGame) {
-            newGame();
-        }
-    }
+        validate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
-    private void validate() {
-        String w = wordEnteredTv.getText().toString();
+                String userwordenter = wordEnteredTv.getText().toString();
 
-        if (wordToFind.equals(w)) {
-            Toast.makeText(this, "Congratulations ! You found the word " + wordToFind, Toast.LENGTH_SHORT).show();
-            newGame();
-        } else {
-            Toast.makeText(this, "Retry !", Toast.LENGTH_SHORT).show();
-        }
-    }
+                if (userwordenter.equalsIgnoreCase(currentword)){
 
-    private void newGame() {
-        wordToFind = Anagram.randomWord();
-        String wordShuffled = Anagram.shuffleWord(wordToFind);
-        wordTv.setText(wordShuffled);
-        wordEnteredTv.setText("");
+                    Toast.makeText(MainActivity.this, "Awesome", Toast.LENGTH_SHORT).show();
+                    newGame();
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "Wrong Answer", Toast.LENGTH_SHORT).show();
+
+                }
+
+            }
+        });
+        newGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                newGame();
+            }
+        });
+
     }
+private String suffleword(String shufword){
+
+    List<String> letters = Arrays.asList(shufword.split(""));
+
+    Collections.shuffle(letters);
+
+    String shuffled = "";
+
+    for (String letter : letters){
+
+        shuffled += letter;
+    }
+    return shuffled;
+}
+        private void newGame(){
+try {
+    List<String> list = dbhelper.fetch2();
+    String[] array = list.toArray(new String[0]);
+
+
+    currentword = array[random.nextInt(array.length)];
+
+    wordTv.setText(suffleword(currentword));
+
+    wordEnteredTv.setText("");
+
+
+} catch (Exception e) {
+    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+}
+
+
+}
 }
